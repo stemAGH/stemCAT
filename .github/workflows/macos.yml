@@ -1,0 +1,65 @@
+name: Build macOS beta
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['macos/**', 'tools/ExportMacAssets.cs', '.github/workflows/macos.yml']
+permissions:
+  contents: read
+concurrency:
+  group: macos-beta
+  cancel-in-progress: false
+jobs:
+  artwork:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Export character artwork
+        shell: pwsh
+        run: |
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $sources = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','tools/ExportMacAssets.cs' | ForEach-Object { (Resolve-Path $_).Path }
+          & $csc /nologo /target:exe /out:ExportMacAssets.exe /r:System.Drawing.dll /r:System.Web.Extensions.dll $sources
+          if ($LASTEXITCODE -ne 0) { throw 'Asset exporter failed to build.' }
+          & ./ExportMacAssets.exe mac-assets
+          if ($LASTEXITCODE -ne 0) { throw 'Asset export failed.' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: mac-artwork
+          path: mac-assets/
+          retention-days: 3
+  macos:
+    needs: artwork
+    runs-on: macos-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: mac-artwork
+          path: macos/Assets
+      - name: Build both Mac architectures and run checks
+        run: bash macos/build.sh
+      - name: Publish Mac beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tag=mac-v2.1.0-beta.1
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo 'This beta is already published; increment its tag before publishing another.' >&2
+            exit 1
+          fi
+          gh release create "$tag" dist/stemCAT-macOS-universal.zip dist/SHA256SUMS-macOS.txt \
+            --target "$RELEASE_COMMIT" --title 'stemCAT for macOS 2.1 beta 1' \
+            --notes-file macos/RELEASE.md --prerelease --draft
+          gh release edit "$tag" --draft=false --prerelease --latest=false

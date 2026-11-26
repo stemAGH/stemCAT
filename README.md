@@ -3,7 +3,7 @@
 **A desktop companion that types, clicks, and idles along with you.**
 
 Twelve characters. Custom colours. A tiny keyboard of their own.
-Built for Windows, with no account, subscription, or network connection required.
+Available for Windows, with an early native macOS beta. No account, subscription, or network connection is required.
 
 [**Download stemCAT.exe**](https://github.com/stemAGH/stemCAT/releases/latest/download/stemCAT.exe) · [All releases](https://github.com/stemAGH/stemCAT/releases) · [Report an issue](https://github.com/stemAGH/stemCAT/issues)
 
@@ -18,9 +18,27 @@ Built for Windows, with no account, subscription, or network connection required
 
 **This is a portable app, not a setup installer.** There is no installation wizard, and the executable runs on its own. It saves preferences separately in `%APPDATA%\stemCAT\settings.ini`.
 
-**Requirements:** Windows 10 or 11 with .NET Framework 4.x available. No separate game engine or asset downloads are needed. macOS and Linux are not supported.
+**Requirements:** Windows 10 or 11 with .NET Framework 4.x available. No separate game engine or asset downloads are needed. For macOS, use the separate beta below. Linux is not supported.
 
 The executable is currently unsigned, so Windows may show an unknown-publisher or SmartScreen warning. Download only from this repository's Releases page. A SHA-256 checksum is included with each release for checking the downloaded file.
+
+## macOS beta
+
+[**Download the Mac beta**](https://github.com/stemAGH/stemCAT/releases/tag/mac-v2.1.0-beta.1) · [Mac beta details and limitations](macos/RELEASE.md)
+
+The universal Mac app targets **macOS 12+**, on Apple silicon and Intel. Extract the ZIP, move `stemCAT.app` to Applications, and launch it. Use its **stemCAT menu-bar item** to choose a character, colour preset, size, opacity, or click-through mode.
+
+Choose **Enable keyboard reactions** and grant **Input Monitoring** in System Settings → Privacy & Security, then quit and reopen the app. Idle animations and local interactions work without this permission. **Control + Option + L** toggles click-through when keyboard monitoring is enabled; the menu-bar item remains available regardless.
+
+The first Mac beta reuses the existing artwork as preset animation poses. It supports all twelve characters and their colour presets, typing/mouse activity, idle/sleep/petting, dragging, resizing, opacity, and green-screen mode. Exact per-key positioning, key labels, pointer-following eyes, custom colour editing, keyboard direction, launch at login, and separate mouse-button/scroll animations remain Windows-only. The feature and shortcut tables below describe the Windows edition.
+
+**This beta is ad-hoc signed and not Apple-notarized. Gatekeeper may block it.** Developer ID signing and notarization are still required for a verified consumer release. Do not disable Gatekeeper. Real-Mac UI and permission testing is still outstanding; automated build checks are not a substitute for that testing.
+
+Mac preferences use the `com.stemagh.stemcat` UserDefaults domain. The Mac app only keeps short-lived activity flags; it does not collect typed text or use the network.
+
+### Building the Mac app
+
+The [Mac workflow](.github/workflows/macos.yml) exports artwork from the C# renderer on Windows, then compiles the native AppKit host on macOS. It checks both architectures and all character atlases before packaging the ZIP. To build manually, compile `tools/ExportMacAssets.cs` with `Coat.cs`, `Character.cs`, `CatScene.cs`, and `DarkCharacters.cs` plus the System.Drawing and System.Web.Extensions references. Run the exporter with an output folder, copy that folder to `macos/Assets` on a Mac with Xcode command-line tools, then run `bash macos/build.sh` from the project root.
 
 ## What it does
 
@@ -134,3 +152,4 @@ Releases are built and checked on a Windows GitHub Actions runner. Only the exec
 Turn off **Start with Windows** if enabled, choose **Quit**, and delete the executable. To also remove saved preferences, delete `%APPDATA%\stemCAT`.
 
 Existing settings from the earlier DeskCat name are imported when no stemCAT settings file exists. If you used that version and want to remove all preferences, also remove its old `%APPDATA%\DeskCat` folder.
+
