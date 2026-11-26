@@ -27,4 +27,3 @@ lipo dist/stemCAT.app/Contents/MacOS/stemCAT -verify_arch arm64 x86_64
 dist/stemCAT.app/Contents/MacOS/stemCAT --self-test
 ditto -c -k --sequesterRsrc --keepParent dist/stemCAT.app dist/stemCAT-macOS-universal.zip
 (cd dist && shasum -a 256 stemCAT-macOS-universal.zip > SHA256SUMS-macOS.txt)
-
