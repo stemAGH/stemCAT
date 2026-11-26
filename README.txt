@@ -63,4 +63,3 @@ REQUIREMENTS
 UNINSTALL
   Quit from the menu, untick "Start with Windows" first if you turned it on, then delete
   this folder and %APPDATA%\stemCAT.
-

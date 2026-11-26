@@ -1,0 +1,9 @@
+*
+!.gitignore
+!README.txt
+!build.bat
+!stemCAT.ico
+!src/
+!src/*.cs
+!checks/
+!checks/*.cs
