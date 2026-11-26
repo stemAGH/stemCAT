@@ -5,7 +5,7 @@
 Twelve characters. Custom colours. A tiny keyboard of their own.
 Available for Windows, with an early native macOS beta. No account, subscription, or network connection is required.
 
-[**Download stemCAT.exe**](https://github.com/stemAGH/stemCAT/releases/latest/download/stemCAT.exe) · [All releases](https://github.com/stemAGH/stemCAT/releases) · [Report an issue](https://github.com/stemAGH/stemCAT/issues)
+[**Download for Windows**](https://github.com/stemAGH/stemCAT/releases/latest/download/stemCAT.exe) · [**Mac beta**](https://github.com/stemAGH/stemCAT/releases/tag/mac-v2.1.0-beta.1) · [All releases](https://github.com/stemAGH/stemCAT/releases) · [Report an issue](https://github.com/stemAGH/stemCAT/issues)
 
 ![The twelve stemCAT characters at their keyboards](docs/characters.jpg)
 
@@ -152,4 +152,5 @@ Releases are built and checked on a Windows GitHub Actions runner. Only the exec
 Turn off **Start with Windows** if enabled, choose **Quit**, and delete the executable. To also remove saved preferences, delete `%APPDATA%\stemCAT`.
 
 Existing settings from the earlier DeskCat name are imported when no stemCAT settings file exists. If you used that version and want to remove all preferences, also remove its old `%APPDATA%\DeskCat` folder.
+
 
