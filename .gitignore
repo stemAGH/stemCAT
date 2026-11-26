@@ -1,9 +1,15 @@
 *
 !.gitignore
 !README.txt
+!README.md
 !build.bat
 !stemCAT.ico
 !src/
 !src/*.cs
 !checks/
 !checks/*.cs
+!docs/
+!docs/*.jpg
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml

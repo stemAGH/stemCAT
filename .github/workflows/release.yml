@@ -1,0 +1,70 @@
+name: Build and release Windows app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/release.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Build executable and run checks
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          if (!(Test-Path $csc)) { throw 'The .NET Framework compiler was not found.' }
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $sources = Get-ChildItem src/*.cs | ForEach-Object { $_.FullName }
+          & $csc /nologo /target:winexe /platform:anycpu /optimize+ /out:dist\stemCAT.exe /win32icon:stemCAT.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll $sources
+          if ($LASTEXITCODE -ne 0) { throw 'Application build failed.' }
+          $checks = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','checks/DarkChecks.cs' | ForEach-Object { (Resolve-Path $_).Path }
+          & $csc /nologo /target:exe /out:dist\CharacterChecks.exe /r:System.Drawing.dll $checks
+          if ($LASTEXITCODE -ne 0) { throw 'Check build failed.' }
+          & ./dist/CharacterChecks.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Character checks failed.' }
+          $render = Start-Process ./dist/stemCAT.exe -ArgumentList '--render-test','dist/previews' -Wait -PassThru
+          if ($render.ExitCode -ne 0) { throw 'Render checks failed.' }
+          if ((Get-ChildItem dist/previews/*.png).Count -lt 112) { throw 'Render output is incomplete.' }
+          $hash = (Get-FileHash dist/stemCAT.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  stemCAT.exe" | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          $version = [Diagnostics.FileVersionInfo]::GetVersionInfo((Resolve-Path dist/stemCAT.exe)).FileVersion
+          $tag = 'v' + ([version]$version).ToString(3)
+          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+
+      - name: Publish portable download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $existing = gh release view $env:RELEASE_TAG --json isDraft --jq '.isDraft' 2>$null
+          if ($LASTEXITCODE -eq 0) { throw 'This version already has a release. Update the assembly version before publishing another.' }
+          @'
+          Download stemCAT.exe below and double-click it to run. This is a portable Windows app, not a setup installer.
+
+          Includes twelve characters, keyboard and mouse reactions, idle/sleep animations, custom colours, click-through, privacy mode, and green-screen capture.
+
+          Requires Windows 10 or 11 with .NET Framework 4.x. The executable is unsigned. SHA256SUMS.txt contains its checksum. See the repository README for screenshots, controls, and privacy details.
+          '@ | Set-Content dist/release-notes.md
+          gh release create $env:RELEASE_TAG dist/stemCAT.exe dist/SHA256SUMS.txt --target $env:RELEASE_COMMIT --title "stemCAT $env:RELEASE_TAG" --notes-file dist/release-notes.md --draft
+          if ($LASTEXITCODE -ne 0) { throw 'Release creation or upload failed.' }
+          gh release edit $env:RELEASE_TAG --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }
