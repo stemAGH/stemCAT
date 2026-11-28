@@ -32,7 +32,7 @@ struct Activity {
 
 func readCharacters(_ directory: URL) throws -> [Character] {
     let list = try JSONDecoder().decode([Character].self, from: Data(contentsOf: directory.appendingPathComponent("characters.json")))
-    guard list.count == 12, Set(list.map { $0.id }).count == list.count, list.allSatisfy({ !$0.palettes.isEmpty }) else {
+    guard list.count == 18, Set(list.map { $0.id }).count == list.count, list.allSatisfy({ !$0.palettes.isEmpty }) else {
         throw NSError(domain: "stemCAT", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid character catalog"])
     }
     return list
@@ -260,7 +260,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func about(_ sender: Any?) {
         let alert = NSAlert(); alert.messageText = "stemCAT for macOS · beta"
-        alert.informativeText = "Twelve companions and their colour presets. Drag to move; hold the head to pet.\n\nThis beta uses preset animation poses. Exact key positioning, pointer-following eyes, custom colour editing, keyboard flipping, and launch at login are Windows-only for now. No key labels are shown.\n\nNo network features or keystroke logs. Built for Intel and Apple silicon."
+        alert.informativeText = "Eighteen companions and their colour presets. Drag to move; hold the head to pet.\n\nThis beta uses preset animation poses. Exact key positioning, pointer-following eyes, custom colour editing, keyboard flipping, and launch at login are Windows-only for now. No key labels are shown.\n\nNo network features or keystroke logs. Built for Intel and Apple silicon."
         alert.runModal()
     }
     @objc func quit(_ sender: Any?) { NSApp.terminate(nil) }

@@ -4,12 +4,16 @@
 
 **A desktop companion that types, clicks, and idles along with you.**
 
-Twelve characters. Custom colours. A tiny keyboard of their own.
+Eighteen characters in the development branch. Custom colours. A tiny keyboard of their own.
 Available for Windows, with an early native macOS beta. No account, subscription, or network connection is required.
 
 [**Download for Windows**](https://github.com/stemAGH/stemCAT/releases/latest/download/stemCAT.exe) · [**Mac beta**](https://github.com/stemAGH/stemCAT/releases/tag/mac-v2.1.0-beta.1) · [All releases](https://github.com/stemAGH/stemCAT/releases) · [Report an issue](https://github.com/stemAGH/stemCAT/issues)
 
-![The twelve stemCAT characters at their keyboards](docs/characters.jpg)
+![The original twelve stemCAT characters at their keyboards](docs/characters.jpg)
+
+### Cozy Cat collection (development build)
+
+Six new selectable companions: Cozy Ginger, Cozy Tuxedo, Cozy Calico, Cozy Cloud, Cozy Blue and Cozy Cocoa. These are original softly shaded vector cats with rounded faces, expressive eyes and the same typing, mouse, petting and sleep interactions as the classic cast. The original twelve remain available. Published downloads remain unchanged until a new release is built and verified.
 
 ## Download and run
 
