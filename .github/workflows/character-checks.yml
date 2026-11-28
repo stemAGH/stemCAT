@@ -23,7 +23,7 @@ jobs:
           $sources = Get-ChildItem src/*.cs | ForEach-Object { $_.FullName }
           & $csc /nologo /target:winexe /platform:anycpu /optimize+ /out:dist\stemCAT.exe /win32icon:stemCAT.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll $sources
           if ($LASTEXITCODE -ne 0) { throw 'Application build failed' }
-          $checks = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','checks/DarkChecks.cs'
+          $checks = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','checks/DarkChecks.cs' | ForEach-Object { (Resolve-Path $_).Path }
           & $csc /nologo /target:exe /out:dist\CharacterChecks.exe /r:System.Drawing.dll $checks
           if ($LASTEXITCODE -ne 0) { throw 'Checks build failed' }
           & ./dist/CharacterChecks.exe
@@ -43,7 +43,8 @@ jobs:
         shell: pwsh
         run: |
           $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          & $csc /nologo /target:exe /out:dist\ExportMacAssets.exe /r:System.Drawing.dll /r:System.Web.Extensions.dll src/Coat.cs src/Character.cs src/CatScene.cs src/DarkCharacters.cs tools/ExportMacAssets.cs
+          $sources = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','tools/ExportMacAssets.cs' | ForEach-Object { (Resolve-Path $_).Path }
+          & $csc /nologo /target:exe /out:dist\ExportMacAssets.exe /r:System.Drawing.dll /r:System.Web.Extensions.dll $sources
           if ($LASTEXITCODE -ne 0) { throw 'Asset exporter build failed' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
