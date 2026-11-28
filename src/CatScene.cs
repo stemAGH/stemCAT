@@ -254,6 +254,14 @@ namespace stemCAT
 
         public bool HitHead(PointF p)
         {
+            if (Char.Cozy)
+            {
+                double angle = -(tilt + ShakeAngle()) * Math.PI / 180.0;
+                float px = p.X - 160, py = p.Y - 140 - headDy;
+                float x = (float)(px * Math.Cos(angle) - py * Math.Sin(angle));
+                float y = (float)(px * Math.Sin(angle) + py * Math.Cos(angle)) + 140;
+                return x * x / (75f * 75f) + (y - 83) * (y - 83) / (58f * 58f) <= 1f;
+            }
             if (DarkCharacter)
             {
                 double a = -(tilt + ShakeAngle()) * Math.PI / 180.0;
@@ -788,6 +796,12 @@ namespace stemCAT
                 g.Restore(st);
                 return;
             }
+            if (Char.Cozy)
+            {
+                DrawCozyHead(g, full);
+                g.Restore(st);
+                return;
+            }
             DrawEars(g);
             switch (Char.Head)
             {
@@ -804,6 +818,122 @@ namespace stemCAT
             DrawFace(g);
             if (Char.Head == HeadStyle.Hood) DrawDrawstrings(g);
             g.Restore(st);
+        }
+
+        // Original soft vinyl/plush-inspired head, using the same live animation state
+        // as the classic cast. No external artwork, assets or new input collection.
+        void CozyFill(Graphics g, GraphicsPath path, Color color, float cx, float cy)
+        {
+            using (PathGradientBrush b = new PathGradientBrush(path))
+            {
+                b.CenterPoint = P(cx, cy);
+                b.CenterColor = Coat.Shade(color, 0.22f);
+                b.SurroundColors = new Color[] { Coat.Shade(color, -0.16f) };
+                b.FocusScales = new PointF(0.20f, 0.20f);
+                g.FillPath(b, path);
+            }
+            using (Pen border = RoundPen(Coat.Shade(color, -0.27f), 1.5f))
+                g.DrawPath(border, path);
+        }
+
+        void DrawCozyHead(Graphics g, bool full)
+        {
+            // Rounded triangular ears sit behind a broad, softly shaded head.
+            for (int side = -1; side <= 1; side += 2)
+            {
+                GraphicsState earState = g.Save();
+                g.TranslateTransform(160, 0);
+                g.ScaleTransform(side, 1);
+                using (GraphicsPath ear = new GraphicsPath())
+                {
+                    ear.AddBezier(35, 49, 42, 33, 59, 7, 67, 12);
+                    ear.AddBezier(67, 12, 77, 14, 78, 51, 66, 73);
+                    ear.AddLine(66, 73, 35, 49); ear.CloseFigure();
+                    CozyFill(g, ear, Coat.Fur, 56, 35);
+                }
+                using (GraphicsPath inner = new GraphicsPath())
+                using (SolidBrush pink = new SolidBrush(Coat.EarInner))
+                {
+                    inner.AddBezier(47, 44, 55, 32, 62, 20, 65, 24);
+                    inner.AddBezier(65, 24, 70, 28, 68, 48, 63, 55);
+                    inner.AddLine(63, 55, 47, 44); inner.CloseFigure();
+                    g.FillPath(pink, inner);
+                }
+                g.Restore(earState);
+            }
+            using (GraphicsPath head = new GraphicsPath())
+            {
+                head.AddBezier(160, 30, 111, 29, 86, 49, 85, 86);
+                head.AddBezier(85, 86, 76, 126, 108, 142, 160, 143);
+                head.AddBezier(160, 143, 212, 142, 244, 126, 235, 86);
+                head.AddBezier(235, 86, 234, 49, 209, 29, 160, 30);
+                head.CloseFigure();
+                CozyFill(g, head, Coat.Fur, 145, 62);
+                GraphicsState clip = g.Save();
+                g.SetClip(head, CombineMode.Intersect);
+                if (Coat.UsePatches)
+                {
+                    using (SolidBrush patch = new SolidBrush(Coat.Patch1)) g.FillEllipse(patch, 86, 19, 77, 66);
+                    using (SolidBrush patch = new SolidBrush(Coat.Patch2)) g.FillEllipse(patch, 186, 34, 65, 53);
+                }
+                if (Coat.UseStripes)
+                using (Pen stripes = RoundPen(A(Coat.Stripe, 180), 5f))
+                {
+                    g.DrawBezier(stripes, 144, 30, 145, 38, 150, 42, 151, 48);
+                    g.DrawBezier(stripes, 160, 28, 160, 36, 160, 43, 160, 53);
+                    g.DrawBezier(stripes, 176, 30, 175, 38, 170, 42, 169, 48);
+                    g.DrawLine(stripes, 87, 84, 99, 88); g.DrawLine(stripes, 88, 96, 99, 99);
+                    g.DrawLine(stripes, 233, 84, 221, 88); g.DrawLine(stripes, 232, 96, 221, 99);
+                }
+                using (SolidBrush muzzle = new SolidBrush(Coat.Belly))
+                {
+                    if (Coat.WhitePaws)
+                    {
+                        g.FillEllipse(muzzle, 144, 72, 32, 60);
+                        g.FillEllipse(muzzle, 115, 102, 90, 44);
+                    }
+                    else g.FillEllipse(muzzle, 134, 97, 52, 33);
+                }
+                g.Restore(clip);
+            }
+
+            Color ink = Color.FromArgb(48, 37, 43);
+            Color lid = Coat.Luma(Coat.Fur) < 0.35f ? Color.FromArgb(222, 209, 202) : ink;
+            float opening = full ? eyeOpen : 1f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = 160 + side * 30;
+                const float y = 86;
+                if (full && Petting)
+                    using (Pen p = RoundPen(lid, 3f)) g.DrawArc(p, x - 9, y - 3, 18, 12, 180, 180);
+                else if ((full && mode == CatMode.Sleep) || opening < 0.18f)
+                    using (Pen p = RoundPen(lid, 3f)) g.DrawArc(p, x - 9, y - 8, 18, 12, 0, 180);
+                else
+                {
+                    float lx = full ? look.X * 0.55f : 0;
+                    float ly = full ? look.Y * 0.55f : 0;
+                    float h = 20f * Math.Max(0.18f, opening);
+                    using (SolidBrush rim = new SolidBrush(lid)) g.FillEllipse(rim, x + lx - 10, y + ly - h / 2 - 1, 20, h + 2);
+                    using (SolidBrush eye = new SolidBrush(Coat.Eye)) g.FillEllipse(eye, x + lx - 9, y + ly - h / 2, 18, h);
+                    using (SolidBrush pupil = new SolidBrush(ink)) g.FillEllipse(pupil, x + lx - 6, y + ly - h / 2, 12, h);
+                    using (SolidBrush shine = new SolidBrush(Color.White)) g.FillEllipse(shine, x + lx - 5, y + ly - h / 2 + 2, 5, Math.Min(5, h / 2));
+                }
+                using (SolidBrush cheek = new SolidBrush(A(Color.FromArgb(238, 139, 151), full && Petting ? 185 : 95)))
+                    g.FillEllipse(cheek, x + side * 10 - 10, 100, 20, 9);
+            }
+            using (GraphicsPath nose = Poly(155, 104, 165, 104, 160, 109))
+            using (SolidBrush b = new SolidBrush(Coat.Nose)) g.FillPath(b, nose);
+            using (Pen mouth = RoundPen(ink, 2.3f))
+            {
+                g.DrawLine(mouth, 160, 109, 160, 112);
+                g.DrawArc(mouth, 151, 108, 9, 8, 0, 180);
+                g.DrawArc(mouth, 160, 108, 9, 8, 0, 180);
+            }
+            using (Pen whisker = RoundPen(A(lid, 135), 1.4f))
+            {
+                g.DrawLine(whisker, 121, 107, 100, 103); g.DrawLine(whisker, 121, 113, 100, 115);
+                g.DrawLine(whisker, 199, 107, 220, 103); g.DrawLine(whisker, 199, 113, 220, 115);
+            }
         }
 
         void DrawEars(Graphics g)

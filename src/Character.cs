@@ -25,7 +25,7 @@ namespace stemCAT
         public TailStyle Tail = TailStyle.Cat;
         public BodyStyle Body = BodyStyle.Fur;
         public TypeFx Fx = TypeFx.None;
-        public bool Whiskers = true, Neon, Glitch, Float, EyePatches, ArmsAccent, PawsAccent;
+        public bool Whiskers = true, Neon, Glitch, Float, EyePatches, ArmsAccent, PawsAccent, Cozy;
         public Color Keyboard, Keycap, Glow, Mouse;
         public List<Coat> Palettes = new List<Coat>();
 
@@ -156,6 +156,20 @@ namespace stemCAT
             l.Add(l.Find(delegate(Character ch) { return ch.Id == "cat"; }).Variant("nightcat", "Night Cat"));
             l.Add(l.Find(delegate(Character ch) { return ch.Id == "hacker"; }).Variant("wraith", "Wraith Hacker"));
             l.Add(l.Find(delegate(Character ch) { return ch.Id == "cybercat"; }).Variant("cyberstalker", "Cyber Stalker"));
+
+            // Separate selectable companions; existing characters and IDs are unchanged.
+            string[] cozyIds = { "cozyginger", "cozytuxedo", "cozycalico", "cozycloud", "cozyblue", "cozycocoa" };
+            string[] cozyNames = { "Cozy Ginger", "Cozy Tuxedo", "Cozy Calico", "Cozy Cloud", "Cozy Blue", "Cozy Cocoa" };
+            string[] coatNames = { "Orange Tabby", "Tuxedo", "Calico", "Snow White", "Russian Blue", "Brown Tabby" };
+            for (int i = 0; i < cozyIds.Length; i++)
+            {
+                c = new Character(); c.Id = cozyIds[i]; c.Name = cozyNames[i]; c.Cozy = true;
+                c.Desk("#BDAA94", "#F8F1E6", "#E6A377", "#F8F1E6");
+                Coat k = Coat.FindPreset(coatNames[i]);
+                k.CharacterId = c.Id;
+                c.Palettes.Add(k);
+                l.Add(c);
+            }
 
             all = l;
             return all;

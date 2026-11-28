@@ -1,0 +1,53 @@
+name: Character build and render checks
+on:
+  push:
+    branches: ['feat/cozy-cat-collection']
+  pull_request:
+    paths: ['src/**', 'checks/**', 'macos/**', 'tools/**', '.github/workflows/character-checks.yml']
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Compile Windows app and character tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $sources = Get-ChildItem src/*.cs | ForEach-Object { $_.FullName }
+          & $csc /nologo /target:winexe /platform:anycpu /optimize+ /out:dist\stemCAT.exe /win32icon:stemCAT.ico /r:System.Windows.Forms.dll /r:System.Drawing.dll $sources
+          if ($LASTEXITCODE -ne 0) { throw 'Application build failed' }
+          $checks = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','checks/DarkChecks.cs' | ForEach-Object { (Resolve-Path $_).Path }
+          & $csc /nologo /target:exe /out:dist\CharacterChecks.exe /r:System.Drawing.dll $checks
+          if ($LASTEXITCODE -ne 0) { throw 'Checks build failed' }
+          & ./dist/CharacterChecks.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Character checks failed' }
+      - name: Render all characters and verify new preview files
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $p = Start-Process ./dist/stemCAT.exe -ArgumentList '--render-test','dist/previews' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw 'Render failed' }
+          foreach ($id in 'cozyginger','cozytuxedo','cozycalico','cozycloud','cozyblue','cozycocoa') {
+            foreach ($file in "char_${id}_0.png","state_${id}_sleep.png","state_${id}_pet.png","state_${id}_pointer_near.png","icon_${id}.png") {
+              if (!(Test-Path "dist/previews/$file")) { throw "Missing $file" }
+            }
+          }
+      - name: Compile macOS artwork exporter
+        shell: pwsh
+        run: |
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          $sources = 'src/Coat.cs','src/Character.cs','src/CatScene.cs','src/DarkCharacters.cs','tools/ExportMacAssets.cs' | ForEach-Object { (Resolve-Path $_).Path }
+          & $csc /nologo /target:exe /out:dist\ExportMacAssets.exe /r:System.Drawing.dll /r:System.Web.Extensions.dll $sources
+          if ($LASTEXITCODE -ne 0) { throw 'Asset exporter build failed' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: character-previews
+          path: dist/previews/
+          if-no-files-found: error
