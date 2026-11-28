@@ -1,5 +1,7 @@
 # stemCAT
 
+[![Sponsor stemCAT on GitHub](https://img.shields.io/badge/Sponsor-stemCAT-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/stemAGH)
+
 **A desktop companion that types, clicks, and idles along with you.**
 
 Twelve characters. Custom colours. A tiny keyboard of their own.
@@ -153,4 +155,12 @@ Turn off **Start with Windows** if enabled, choose **Quit**, and delete the exec
 
 Existing settings from the earlier DeskCat name are imported when no stemCAT settings file exists. If you used that version and want to remove all preferences, also remove its old `%APPDATA%\DeskCat` folder.
 
+## Support stemCAT
 
+Enjoy having a little company on your desktop? Optional sponsorship helps support continued development, new characters and platform improvements.
+
+[![Sponsor stemCAT on GitHub](https://img.shields.io/badge/Sponsor-stemCAT-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/stemAGH)
+
+stemCAT is free to download and use. Sponsorship is entirely optional and is not required to access the app.
+
+You can also help by starring this repository, reporting bugs or sharing stemCAT with someone who would enjoy it.
